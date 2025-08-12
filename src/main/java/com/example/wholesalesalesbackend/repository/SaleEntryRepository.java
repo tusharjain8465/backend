@@ -52,13 +52,13 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
 
        @Query(value = "SELECT SUM(total_price) AS sale, SUM(profit) AS profit " +
                      "FROM sale_entry WHERE sale_date_time BETWEEN :from AND :to", nativeQuery = true)
-       ProfitAndSaleProjection getTotalPriceAndProfitBetweenDates(@Param("from") LocalDate from,
-                     @Param("to") LocalDate to);
+       ProfitAndSaleProjection getTotalPriceAndProfitBetweenDates(@Param("from") LocalDateTime from,
+                     @Param("to") LocalDateTime to);
 
        @Query(value = "SELECT SUM(total_price) AS sale, SUM(profit) AS profit " +
                      "FROM sale_entry WHERE client_id= :clientId and sale_date_time BETWEEN :from AND :to", nativeQuery = true)
-       ProfitAndSaleProjection getTotalPriceAndProfitBetweenDatesByClient(@Param("from") LocalDate from,
-                     @Param("to") LocalDate to,
+       ProfitAndSaleProjection getTotalPriceAndProfitBetweenDatesByClient(@Param("from") LocalDateTime from,
+                     @Param("to") LocalDateTime to,
                      @Param("clientId") Long clientId);
 
        @Modifying
