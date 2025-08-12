@@ -318,19 +318,20 @@ public class SaleEntryService {
 
         // If 'days' is provided but no from/to, calculate date range
         if (days != null && from == null && to == null) {
-            to = LocalDateTime.now(ZoneId.of("Asia/Kolkata"));
+            LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+            to = today.atTime(LocalTime.MAX); // today end of day
+            from = today.minusDays(days).atStartOfDay(); // days ago start of day
 
-            from = to.minusDays(days);
         }
 
         ProfitAndSaleProjection result;
 
         // If clientId is provided, use client-specific repository method
         if (clientId != null) {
-            result = saleEntryRepository.getTotalPriceAndProfitBetweenDatesByClient(from.toLocalDate(),
-                    to.toLocalDate(), clientId);
+            result = saleEntryRepository.getTotalPriceAndProfitBetweenDatesByClient(from,
+                    to, clientId);
         } else {
-            result = saleEntryRepository.getTotalPriceAndProfitBetweenDates(from.toLocalDate(), to.toLocalDate());
+            result = saleEntryRepository.getTotalPriceAndProfitBetweenDates(from, to);
         }
 
         // Handle null projection result
@@ -342,17 +343,14 @@ public class SaleEntryService {
     }
 
     public ProfitAndSale getTotalSaleDateRange(LocalDateTime from, LocalDateTime to, Long clientId) {
-        ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
-
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
+      
         if (from != null) {
-            from = from.atZone(ZoneId.systemDefault())
-                    .withZoneSameInstant(indiaZone)
-                    .toLocalDateTime();
+            from = today.atStartOfDay(); // days ago start of day
+
         }
         if (to != null) {
-            to = to.atZone(ZoneId.systemDefault())
-                    .withZoneSameInstant(indiaZone)
-                    .toLocalDateTime();
+           to = today.atTime(LocalTime.MAX); // today end of day
         }
 
         ProfitAndSaleProjection result = null;
@@ -362,11 +360,11 @@ public class SaleEntryService {
 
         if (isDateRangeProvided && isClientProvided) {
             // Case 1: Both dates and client ID are provided
-            result = saleEntryRepository.getTotalPriceAndProfitBetweenDatesByClient(from.toLocalDate(),
-                    to.toLocalDate(), clientId);
+            result = saleEntryRepository.getTotalPriceAndProfitBetweenDatesByClient(from,
+                    to, clientId);
         } else if (isDateRangeProvided) {
             // Case 2: Only dates provided
-            result = saleEntryRepository.getTotalPriceAndProfitBetweenDates(from.toLocalDate(), to.toLocalDate());
+            result = saleEntryRepository.getTotalPriceAndProfitBetweenDates(from, to);
         } else if (isClientProvided) {
             // Case 3: Only client ID provided
             result = saleEntryRepository.getTotalPriceAndProfitByClient(clientId);
