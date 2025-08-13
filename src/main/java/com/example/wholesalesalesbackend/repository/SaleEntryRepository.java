@@ -89,11 +89,11 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
 
        @Query(value = "SELECT SUM(t.total_price) FROM sale_entry t WHERE DATE(t.sale_date_time) < :fromDate ", nativeQuery = true)
        Double getOldBalance(
-                     @Param("fromDate") LocalDate fromDate);
+                     @Param("fromDate") LocalDateTime fromDate);
 
        @Query(value = "SELECT SUM(t.total_price) FROM sale_entry t WHERE t.client_id =:clientId AND DATE(t.sale_date_time) < :fromDate ", nativeQuery = true)
        Double getOldBalanceOfClient(@Param("clientId") Long clientId,
-                     @Param("fromDate") LocalDate fromDate);
+                     @Param("fromDate") LocalDateTime fromDate);
 
        @Modifying
        @Query(value = "DELETE FROM sale_entry WHERE client_id = :clientId", nativeQuery = true)
