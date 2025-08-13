@@ -44,7 +44,6 @@ public class PdfService {
         // Ensure India timezone
         ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
         LocalDate indiaToday = LocalDate.now(indiaZone);
-        LocalDateTime indiaNow = LocalDateTime.now(indiaZone);
 
         Document document = new Document();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -202,3 +201,4 @@ public class PdfService {
     }
 
 }
+
