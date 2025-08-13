@@ -56,23 +56,7 @@ public class PdfController {
         String clientName;
         List<SaleEntry> sales = new ArrayList<>();
 
-        // Convert provided dates to India time
-        if (from != null) {
-            from = ZonedDateTime.of(from, ZoneId.systemDefault())
-                    .withZoneSameInstant(INDIA_ZONE)
-                    .toLocalDateTime();
-        }
-        if (to != null) {
-            to = ZonedDateTime.of(to, ZoneId.systemDefault())
-                    .withZoneSameInstant(INDIA_ZONE)
-                    .toLocalDateTime();
-        }
-        if (depositDatetime != null) {
-            depositDatetime = ZonedDateTime.of(depositDatetime, ZoneId.systemDefault())
-                    .withZoneSameInstant(INDIA_ZONE)
-                    .toLocalDateTime();
-        }
-
+    
         // If no dates provided, use current India time
         if (to == null && from == null) {
             LocalDate today = LocalDate.now(INDIA_ZONE);
@@ -88,7 +72,7 @@ public class PdfController {
             clientName = client.getName();
 
             if (oldBalance == null) {
-                oldBalance = saleEntryRepository.getOldBalanceOfClient(clientId, fromLocalDate);
+                oldBalance = saleEntryRepository.getOldBalanceOfClient(clientId, from);
             }
 
             sales = saleEntryRepository.findByClientIdAndSaleDateBetweenOrderBySaleDateTimeDescCustom(
@@ -98,7 +82,7 @@ public class PdfController {
             clientName = "All_Clients";
 
             if (oldBalance == null) {
-                oldBalance = saleEntryRepository.getOldBalance(fromLocalDate);
+                oldBalance = saleEntryRepository.getOldBalance(from);
             }
 
             sales = saleEntryRepository.findBySaleDateBetweenOrderBySaleDateTimeDescCustom(
