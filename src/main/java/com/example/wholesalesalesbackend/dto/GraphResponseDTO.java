@@ -68,3 +68,4 @@ public class GraphResponseDTO {
         this.highestProfit = highestProfit;
     }
 }
+
