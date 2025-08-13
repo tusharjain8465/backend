@@ -99,4 +99,12 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
        @Query(value = "DELETE FROM sale_entry WHERE client_id = :clientId", nativeQuery = true)
        void deleteByClientId(@Param("clientId") Long clientId);
 
+
+       //for graph Data
+
+       List<SaleEntry> findBySaleDateTimeBetween(LocalDateTime start, LocalDateTime end);
+
+       @Query("SELECT s FROM SaleEntry s WHERE EXTRACT(YEAR FROM s.saleDateTime) = :year")
+       List<SaleEntry> findByYear(int year);
+
 }
