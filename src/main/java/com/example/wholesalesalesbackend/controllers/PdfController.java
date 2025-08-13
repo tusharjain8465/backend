@@ -8,7 +8,9 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -56,7 +58,6 @@ public class PdfController {
         String clientName;
         List<SaleEntry> sales = new ArrayList<>();
 
-    
         // If no dates provided, use current India time
         if (to == null && from == null) {
             LocalDate today = LocalDate.now(INDIA_ZONE);
@@ -104,5 +105,13 @@ public class PdfController {
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 
-}
+    @GetMapping("/ping")
+    public Map<String, Object> pingBackend() {
+        Map<String, Object> response = new HashMap<>();
+        System.out.println("status --> alive");
+        response.put("status", "success");
+        response.put("timestamp", LocalDateTime.now());
+        return response;
+    }
 
+}
