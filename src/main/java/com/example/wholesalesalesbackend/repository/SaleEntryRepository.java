@@ -108,3 +108,4 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
        List<SaleEntry> findByYear(int year);
 
 }
+
