@@ -21,7 +21,7 @@ import com.example.wholesalesalesbackend.service.ClientService;
 import jakarta.validation.Valid;
 
 @RestController
-@CrossOrigin(origins = "https://frontend1-teal.vercel.app")
+@CrossOrigin(origins = "https://frontendpoller1.vercel.app")
 @RequestMapping("/api/clients")
 public class ClientController {
 
