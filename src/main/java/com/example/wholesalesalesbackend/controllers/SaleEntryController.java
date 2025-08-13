@@ -169,12 +169,18 @@ public class SaleEntryController {
                     LocalDate date = LocalDate.of(today.getYear(), today.getMonth(), day);
                     List<SaleEntry> dailyEntries = entriesByDay.getOrDefault(date, Collections.emptyList());
 
-                    double dailySale = dailyEntries.stream().mapToDouble(SaleEntry::getTotalPrice).sum();
-                    double dailyProfit = dailyEntries.stream().mapToDouble(SaleEntry::getProfit).sum();
+                    Double dailySale = dailyEntries.stream()
+                            .mapToDouble(e -> e.getTotalPrice() != null ? e.getTotalPrice() : 0.0)
+                            .sum();
+
+                    Double dailyProfit = dailyEntries.stream()
+                            .mapToDouble(e -> e.getProfit() != null ? e.getProfit() : 0.0)
+                            .sum();
 
                     salesData.add(dailySale);
                     profitData.add(dailyProfit);
                 }
+
                 break;
             }
 
@@ -194,9 +200,18 @@ public class SaleEntryController {
                     LocalDate date = startOfWeek.plusDays(i);
                     List<SaleEntry> dailyEntries = entriesByDay.getOrDefault(date, Collections.emptyList());
 
-                    salesData.add(dailyEntries.stream().mapToDouble(SaleEntry::getTotalPrice).sum());
-                    profitData.add(dailyEntries.stream().mapToDouble(SaleEntry::getProfit).sum());
+                    Double dailySale = dailyEntries.stream()
+                            .mapToDouble(e -> e.getTotalPrice() != null ? e.getTotalPrice() : 0.0)
+                            .sum();
+
+                    Double dailyProfit = dailyEntries.stream()
+                            .mapToDouble(e -> e.getProfit() != null ? e.getProfit() : 0.0)
+                            .sum();
+
+                    salesData.add(dailySale);
+                    profitData.add(dailyProfit);
                 }
+
                 break;
             }
 
@@ -216,9 +231,18 @@ public class SaleEntryController {
                 for (int month = 1; month <= 12; month++) {
                     List<SaleEntry> monthlyEntries = entriesByMonth.getOrDefault(month, Collections.emptyList());
 
-                    salesData.add(monthlyEntries.stream().mapToDouble(SaleEntry::getTotalPrice).sum());
-                    profitData.add(monthlyEntries.stream().mapToDouble(SaleEntry::getProfit).sum());
+                    Double monthlySale = monthlyEntries.stream()
+                            .mapToDouble(e -> e.getTotalPrice() != null ? e.getTotalPrice() : 0.0)
+                            .sum();
+
+                    Double monthlyProfit = monthlyEntries.stream()
+                            .mapToDouble(e -> e.getProfit() != null ? e.getProfit() : 0.0)
+                            .sum();
+
+                    salesData.add(monthlySale);
+                    profitData.add(monthlyProfit);
                 }
+
                 break;
             }
 
