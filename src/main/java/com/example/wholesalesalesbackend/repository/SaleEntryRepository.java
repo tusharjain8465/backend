@@ -151,3 +151,4 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
                      Pageable pageable);
 
 }
+
