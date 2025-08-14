@@ -1,6 +1,8 @@
 package com.example.wholesalesalesbackend.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.wholesalesalesbackend.dto.ProfitAndSale;
@@ -344,13 +346,13 @@ public class SaleEntryService {
 
     public ProfitAndSale getTotalSaleDateRange(LocalDateTime from, LocalDateTime to, Long clientId) {
         LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata"));
-      
+
         if (from != null) {
             from = today.atStartOfDay(); // days ago start of day
 
         }
         if (to != null) {
-           to = today.atTime(LocalTime.MAX); // today end of day
+            to = today.atTime(LocalTime.MAX); // today end of day
         }
 
         ProfitAndSaleProjection result = null;
