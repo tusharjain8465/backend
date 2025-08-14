@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -99,13 +101,53 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
        @Query(value = "DELETE FROM sale_entry WHERE client_id = :clientId", nativeQuery = true)
        void deleteByClientId(@Param("clientId") Long clientId);
 
-
-       //for graph Data
+       // for graph Data
 
        List<SaleEntry> findBySaleDateTimeBetween(LocalDateTime start, LocalDateTime end);
 
        @Query("SELECT s FROM SaleEntry s WHERE EXTRACT(YEAR FROM s.saleDateTime) = :year")
-       List<SaleEntry> findByYear(int year);
+       List<SaleEntry> findByYear(int year); // 1️⃣ By clientId
+
+       Page<SaleEntry> findByClientId(Long clientId, Pageable pageable);
+
+       // 2️⃣ By saleDateTime range
+       Page<SaleEntry> findBySaleDateTimeBetween(LocalDateTime start, LocalDateTime end, Pageable pageable);
+
+       // 3️⃣ By accessoryName containing (partial match, case-insensitive)
+       Page<SaleEntry> findByAccessoryNameContainingIgnoreCase(String accessoryName, Pageable pageable);
+
+       // 4️⃣ By clientId and saleDateTime range
+       Page<SaleEntry> findByClientIdAndSaleDateTimeBetween(Long clientId, LocalDateTime start, LocalDateTime end,
+                     Pageable pageable);
+
+       // 5️⃣ By clientId and accessoryName (partial, ignore case)
+       Page<SaleEntry> findByClientIdAndAccessoryNameContainingIgnoreCase(Long clientId, String accessoryName,
+                     Pageable pageable);
+
+       // 6️⃣ By saleDateTime range and accessoryName (partial, ignore case)
+       Page<SaleEntry> findBySaleDateTimeBetweenAndAccessoryNameContainingIgnoreCase(LocalDateTime start,
+                     LocalDateTime end, String accessoryName, Pageable pageable);
+
+       // 7️⃣ By clientId, saleDateTime range, and accessoryName (partial, ignore case)
+       Page<SaleEntry> findByClientIdAndSaleDateTimeBetweenAndAccessoryNameContainingIgnoreCase(
+                     Long clientId,
+                     LocalDateTime start,
+                     LocalDateTime end,
+                     String accessoryName,
+                     Pageable pageable);
+
+       @Query("""
+                     SELECT s FROM SaleEntry s
+                     WHERE (:clientId IS NULL OR s.client.id = :clientId)
+                       AND (s.saleDateTime >= COALESCE(:startDateTime, s.saleDateTime))
+                       AND (s.saleDateTime <= COALESCE(:endDateTime, s.saleDateTime))
+                       AND (:searchText IS NULL OR LOWER(s.accessoryName) LIKE LOWER(CONCAT('%', :searchText, '%')))
+                     """)
+       Page<SaleEntry> findAllWithFilters(
+                     @Param("clientId") Long clientId,
+                     @Param("startDateTime") LocalDateTime startDateTime,
+                     @Param("endDateTime") LocalDateTime endDateTime,
+                     @Param("searchText") String searchText,
+                     Pageable pageable);
 
 }
-
