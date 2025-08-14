@@ -13,6 +13,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -76,6 +80,44 @@ public class SaleEntryController {
         }
 
         return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/all-sales-new")
+    public ResponseEntity<Page<SaleEntryDTO>> getAllSales(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "search", required = false) String searchText) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("saleDateTime").descending());
+
+        LocalDateTime startDateTime = (startDate != null) ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = (endDate != null) ? endDate.atTime(23, 59, 59) : null;
+
+        Page<SaleEntry> entries = saleEntryRepository.findAllWithFilters(
+                clientId, startDateTime, endDateTime, searchText, pageable);
+
+        Page<SaleEntryDTO> dtos = entries.map(this::toDTO);
+        return ResponseEntity.ok(dtos);
+    }
+
+    private SaleEntryDTO toDTO(SaleEntry entry) {
+        SaleEntryDTO dto = new SaleEntryDTO();
+        dto.setId(entry.getId());
+        dto.setAccessoryName(entry.getAccessoryName());
+        dto.setQuantity(entry.getQuantity());
+        dto.setTotalPrice(entry.getTotalPrice());
+        dto.setProfit(entry.getProfit());
+        dto.setReturnFlag(entry.isReturnFlag());
+        dto.setSaleDateTime(entry.getSaleDateTime());
+
+        if (entry.getClient() != null) {
+            dto.setClientName(entry.getClient().getName());
+        }
+
+        return dto;
     }
 
     @GetMapping("/by-date-range")
