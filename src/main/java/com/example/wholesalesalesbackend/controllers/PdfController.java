@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +61,9 @@ public class PdfController {
         boolean isAllClient = (clientId == null);
         String clientName;
         List<SaleEntry> sales = new ArrayList<>();
-        List<Deposit> depositEntries = new ArrayList<>();
+        List<Deposit> depoEntries = new ArrayList<>();
+
+        Double depositValueofAll = 0.0;
 
         // If no dates provided, use current India time
         if (to == null && from == null) {
@@ -85,8 +86,16 @@ public class PdfController {
             sales = saleEntryRepository.findByClientIdAndSaleDateBetweenOrderBySaleDateTimeDescCustom(
                     clientId, fromLocalDate, toLocalDate);
 
-            depositEntries = depositRepository.findByClientIdAndDepositDateBetweenOrderByDepositDateDescCustom(
-                    clientId,fromLocalDate, toLocalDate);
+            depoEntries = depositRepository.findByClientIdAndDepositDateBetweenOrderByDepositDateDescCustom(clientId,
+                    fromLocalDate, toLocalDate);
+
+            depositValueofAll = depositRepository.getTotalDepositOfClient(
+                    clientId, from);
+
+            if (oldBalance != null && depositValueofAll != null) {
+                oldBalance = oldBalance - depositValueofAll;
+
+            }
 
         } else {
             clientName = "All_Clients";
@@ -98,13 +107,20 @@ public class PdfController {
             sales = saleEntryRepository.findBySaleDateBetweenOrderBySaleDateTimeDescCustom(
                     fromLocalDate, toLocalDate);
 
-            depositEntries = depositRepository.findByDepositDateBetweenOrderByDepositDateDescCustom(
-                    fromLocalDate, toLocalDate);
+            depoEntries = depositRepository.findByDepositDateBetweenOrderByDepositDateDescCustom(fromLocalDate,
+                    toLocalDate);
+
+            depositValueofAll = depositRepository.getTotalDepositOfClient(from);
+
+            if (oldBalance != null && depositValueofAll != null) {
+                oldBalance = oldBalance - depositValueofAll;
+
+            }
 
         }
 
         ByteArrayInputStream bis = pdfService.generateSalesPdf(
-                clientName, sales,depositEntries ,fromLocalDate, toLocalDate, isAllClient,
+                clientName, sales, depoEntries, fromLocalDate, toLocalDate, isAllClient,
                 depositAmount, depositDatetime, oldBalance);
 
         byte[] pdfBytes = bis.readAllBytes();
