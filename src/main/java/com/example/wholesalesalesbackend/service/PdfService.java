@@ -43,7 +43,7 @@ public class PdfService {
         if (oldBalance == null) {
             oldBalance = 0.0;
         }
-        // Ensure India timezone
+
         ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
         LocalDate indiaToday = LocalDate.now(indiaZone);
         LocalDate finalDate = (to != null ? to : indiaToday);
@@ -55,7 +55,6 @@ public class PdfService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // Fonts
             Font fontHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
             Font fontBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
             Font fontNormal = FontFactory.getFont(FontFactory.HELVETICA, 12);
@@ -65,16 +64,14 @@ public class PdfService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy");
             java.text.DecimalFormat noDecimalFormat = new java.text.DecimalFormat("#");
 
-            // Title
-            BaseColor pinkColor = new BaseColor(255, 105, 180); // Hot Pink shade
+            BaseColor pinkColor = new BaseColor(255, 105, 180);
             Font fontShopTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, pinkColor);
 
             Paragraph shopTitle = new Paragraph("Arihant Mobile Shop", fontShopTitle);
             shopTitle.setAlignment(Element.ALIGN_CENTER);
-            shopTitle.setSpacingAfter(20f); // adds ~2 blank lines after title
+            shopTitle.setSpacingAfter(20f);
             document.add(shopTitle);
 
-            // Report Info
             document.add(new Paragraph("Sales Report for → " + clientName, fontBold));
             document.add(new Paragraph("Pdf Generated date → " + indiaToday.format(formatter)));
 
@@ -85,7 +82,6 @@ public class PdfService {
             }
             document.add(Chunk.NEWLINE);
 
-            // ===== Old Balance Row (right aligned, no decimals) =====
             PdfPTable balanceTable = new PdfPTable(1);
             balanceTable.setWidthPercentage(50);
             balanceTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -108,7 +104,6 @@ public class PdfService {
             document.add(balanceTable);
             document.add(Chunk.NEWLINE);
 
-            // ===== SALES TABLE =====
             Paragraph purchaseHeading = new Paragraph("Purchase Entry Table", fontBold);
             purchaseHeading.setAlignment(Element.ALIGN_LEFT);
             document.add(purchaseHeading);
@@ -123,7 +118,6 @@ public class PdfService {
                 salesTable.setWidths(new float[] { 10f, 20f, 40f, 30f });
             }
 
-            // Sales Header
             BaseColor headerBlue = new BaseColor(135, 206, 250);
             Stream.of(isAllClient
                     ? new String[] { "Sr", "Date", "Accessory", "Client", "Price" }
@@ -134,7 +128,6 @@ public class PdfService {
                         salesTable.addCell(cell);
                     });
 
-            // Sales Rows
             int sr = 1;
             Double totalSales = 0.0;
             BaseColor yellow = new BaseColor(255, 255, 153);
@@ -143,11 +136,12 @@ public class PdfService {
                 boolean isReturn = Boolean.TRUE.equals(sale.isReturnFlag());
 
                 PdfPCell srCell = new PdfPCell(new Phrase(String.valueOf(sr++), fontNormal));
+
+                // ✅ Directly format if stored in IST
                 PdfPCell dateCell = new PdfPCell(new Phrase(
-                        sale.getSaleDateTime().atZone(ZoneId.systemDefault())
-                                .withZoneSameInstant(indiaZone)
-                                .toLocalDate().format(formatter),
+                        sale.getSaleDateTime().format(formatter),
                         fontNormal));
+
                 PdfPCell accessoryCell = new PdfPCell(new Phrase(sale.getAccessoryName(), fontNormal));
                 PdfPCell clientCell = null;
                 if (isAllClient) {
@@ -176,13 +170,11 @@ public class PdfService {
                 totalSales += sale.getTotalPrice();
             }
 
-            // Blank row before total
             PdfPCell emptyRow = new PdfPCell(new Phrase(" "));
             emptyRow.setColspan(columnCount);
             emptyRow.setBorder(Rectangle.NO_BORDER);
             salesTable.addCell(emptyRow);
 
-            // Total Sales Row (faint blue highlight, no decimals)
             BaseColor faintBlue = new BaseColor(224, 247, 250);
             PdfPCell totalLabel = new PdfPCell(new Phrase("Total Price", fontBold));
             totalLabel.setColspan(columnCount - 1);
@@ -198,22 +190,18 @@ public class PdfService {
             document.add(salesTable);
             document.add(Chunk.NEWLINE);
 
-            // 👉 New line: Show interim final amount before deposits
             if (!depositEntries.isEmpty()) {
                 double interimFinal = oldBalance + totalSales;
-
                 Chunk interimChunk = new Chunk(
                         "Final Amount = " + noDecimalFormat.format(interimFinal), fontBold);
-                interimChunk.setBackground(new BaseColor(255, 255, 153)); // yellow highlight only behind text
+                interimChunk.setBackground(new BaseColor(255, 255, 153));
 
                 Paragraph interimLine = new Paragraph(interimChunk);
                 interimLine.setAlignment(Element.ALIGN_RIGHT);
-
                 document.add(interimLine);
                 document.add(Chunk.NEWLINE);
             }
 
-            // ===== DEPOSIT TABLE =====
             Double totalDeposits = 0.0;
             if (depositEntries != null && !depositEntries.isEmpty()) {
                 Paragraph paymentHeading = new Paragraph("Payment Entry Table", fontBold);
@@ -225,7 +213,6 @@ public class PdfService {
                 depositTable.setWidthPercentage(100);
                 depositTable.setWidths(new float[] { 10f, 25f, 25f, 30f });
 
-                // Deposit Header
                 BaseColor headerRed = new BaseColor(255, 153, 153);
                 Stream.of(new String[] { "Sr", "Date", "Payment Mode", "Deposit" }).forEach(header -> {
                     PdfPCell cell = new PdfPCell(new Phrase(header, fontBold));
@@ -238,10 +225,9 @@ public class PdfService {
                 for (Deposit dep : depositEntries) {
                     depositTable.addCell(new PdfPCell(new Phrase(String.valueOf(dr++), fontNormal)));
 
+                    // ✅ Directly format if stored in IST
                     depositTable.addCell(new PdfPCell(new Phrase(
-                            dep.getDepositDate().atZone(ZoneId.systemDefault())
-                                    .withZoneSameInstant(indiaZone)
-                                    .toLocalDate().format(formatter),
+                            dep.getDepositDate().format(formatter),
                             fontNormal)));
 
                     depositTable.addCell(new PdfPCell(new Phrase(dep.getNote(), fontNormal)));
@@ -275,7 +261,6 @@ public class PdfService {
                 document.add(Chunk.NEWLINE);
             }
 
-            // ===== Final Balance (Only one line) =====
             Double finalBalance = oldBalance + totalSales - totalDeposits;
 
             Paragraph finalBalanceLine = new Paragraph(
@@ -287,7 +272,6 @@ public class PdfService {
             document.add(Chunk.NEWLINE);
             document.add(Chunk.NEWLINE);
 
-            // Footer
             Paragraph footer = new Paragraph("Thank You For Purchasing\nContact on Vishal Jain Mobile No → 9537886555",
                     fontBold);
             footer.setAlignment(Element.ALIGN_CENTER);
@@ -301,5 +285,4 @@ public class PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
-
 }
