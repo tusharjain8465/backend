@@ -15,6 +15,8 @@ public class DepositService {
     private DepositRepository depositRepository;
 
     public Deposit addDeposit(Deposit deposit) {
+        String addDepositPrefix = "DEPOSIT -> "+ deposit.getNote();
+        deposit.setNote(addDepositPrefix);
         return depositRepository.save(deposit);
     }
 
