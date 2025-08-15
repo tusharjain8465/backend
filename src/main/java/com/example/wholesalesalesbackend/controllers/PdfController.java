@@ -25,7 +25,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.wholesalesalesbackend.model.Client;
+import com.example.wholesalesalesbackend.model.Deposit;
 import com.example.wholesalesalesbackend.model.SaleEntry;
+import com.example.wholesalesalesbackend.repository.DepositRepository;
 import com.example.wholesalesalesbackend.repository.SaleEntryRepository;
 import com.example.wholesalesalesbackend.service.ClientService;
 import com.example.wholesalesalesbackend.service.PdfService;
@@ -43,6 +45,9 @@ public class PdfController {
     @Autowired(required = false)
     SaleEntryRepository saleEntryRepository;
 
+    @Autowired(required = false)
+    DepositRepository depositRepository;
+
     @GetMapping("/sales")
     public ResponseEntity<byte[]> generateSalesPdf(
             @RequestParam(required = false) Long clientId,
@@ -57,6 +62,7 @@ public class PdfController {
         boolean isAllClient = (clientId == null);
         String clientName;
         List<SaleEntry> sales = new ArrayList<>();
+        List<Deposit> depositEntries = new ArrayList<>();
 
         // If no dates provided, use current India time
         if (to == null && from == null) {
@@ -79,6 +85,9 @@ public class PdfController {
             sales = saleEntryRepository.findByClientIdAndSaleDateBetweenOrderBySaleDateTimeDescCustom(
                     clientId, fromLocalDate, toLocalDate);
 
+            depositEntries = depositRepository.findByClientIdAndDepositDateBetweenOrderByDepositDateDescCustom(
+                    clientId,fromLocalDate, toLocalDate);
+
         } else {
             clientName = "All_Clients";
 
@@ -88,10 +97,14 @@ public class PdfController {
 
             sales = saleEntryRepository.findBySaleDateBetweenOrderBySaleDateTimeDescCustom(
                     fromLocalDate, toLocalDate);
+
+            depositEntries = depositRepository.findByDepositDateBetweenOrderByDepositDateDescCustom(
+                    fromLocalDate, toLocalDate);
+
         }
 
         ByteArrayInputStream bis = pdfService.generateSalesPdf(
-                clientName, sales, fromLocalDate, toLocalDate, isAllClient,
+                clientName, sales,depositEntries ,fromLocalDate, toLocalDate, isAllClient,
                 depositAmount, depositDatetime, oldBalance);
 
         byte[] pdfBytes = bis.readAllBytes();
