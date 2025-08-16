@@ -1,8 +1,11 @@
+
 package com.example.wholesalesalesbackend.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -63,6 +66,8 @@ public class PdfService {
             oldBalance = 0.0;
 
         LocalDate indiaToday = LocalDate.now(); // no conversion needed
+        ZoneId indiaZone = ZoneId.of("Asia/Kolkata"); // IST
+
         LocalDate finalDate = (to != null ? to : indiaToday);
 
         Document document = new Document();
@@ -90,25 +95,25 @@ public class PdfService {
             document.add(shopTitle);
 
             // Report Info
-            document.add(new Paragraph("Sales Report for → " + clientName, fontBold));
-            document.add(new Paragraph("Pdf Generated date → " + indiaToday.format(formatter)));
+            document.add(new Paragraph("Sales Report -> " + clientName + "", fontBold));
             if (from != null && to != null) {
                 document.add(new Paragraph(
-                        "" + from.format(formatter) + " se " + to.format(formatter) + " tak ki report",
+                        "" + from.format(formatter) + " To " + to.format(formatter) + " Report",
                         fontBold));
             }
             document.add(Chunk.NEWLINE);
 
             // Old Balance
             String oldBalPrefix = (from != null)
-                    ? "(" + from.minusDays(1).format(formatter) + ") Tak Ka Pending Amount = ₹"
+                    ? "(" + from.minusDays(1).format(formatter) + ") Pending Amount = ₹"
                     : "Pending Amount = ₹";
             Paragraph oldBalanceLine = new Paragraph(oldBalPrefix + noDecimalFormat.format(oldBalance), redFont);
             oldBalanceLine.setAlignment(Element.ALIGN_RIGHT);
             document.add(oldBalanceLine);
             document.add(Chunk.NEWLINE);
 
-            // ===== Merge Sales & Deposits into unified list (no timezone conversion needed) =====
+            // ===== Merge Sales & Deposits into unified list (no timezone conversion
+            // needed) =====
             List<UnifiedEntry> unifiedList = new ArrayList<>();
 
             for (SaleEntry sale : sales) {
@@ -138,11 +143,17 @@ public class PdfService {
             table.setWidthPercentage(100);
             table.setWidths(new float[] { 10f, 25f, 45f, 20f });
 
-            // Header
             Stream.of("Sr", "Date", "Description", "Amount").forEach(header -> {
                 PdfPCell cell = new PdfPCell(new Phrase(header, fontBold));
-                cell.setBackgroundColor(new BaseColor(135, 206, 250));
-                cell.setHorizontalAlignment(PdfPCell.ALIGN_CENTER);
+                cell.setBackgroundColor(new BaseColor(135, 206, 250)); // Light blue
+
+                // Align Amount to right, others to left
+                if ("Amount".equals(header)) {
+                    cell.setHorizontalAlignment(PdfPCell.ALIGN_RIGHT);
+                } else {
+                    cell.setHorizontalAlignment(PdfPCell.ALIGN_LEFT);
+                }
+
                 table.addCell(cell);
             });
 
@@ -187,15 +198,14 @@ public class PdfService {
             document.add(Chunk.NEWLINE);
 
             // ===== Final Amount highlighted in red =====
-            double finalBalance = oldBalance + totalSales + totalDeposits;
+            Double finalBalance = oldBalance + totalSales + totalDeposits;
+            Font finalFont = new Font(Font.FontFamily.HELVETICA, 14, Font.BOLD, BaseColor.RED);
 
-            Font finalFont = new Font(fontBold.getFamily(), fontBold.getSize() * 1, fontBold.getStyle(),
-                    fontBold.getColor());
-
-            Chunk finalChunk = new Chunk(
-                    finalDate.format(formatter) + " Final Amount = ₹" + noDecimalFormat.format(finalBalance),
+            Chunk finalChunk = new Chunk("[ " +
+                    ZonedDateTime.now(indiaZone).format(formatter) +
+                    " Final Amount = ₹" + noDecimalFormat.format(finalBalance) + " ]",
                     finalFont);
-            finalChunk.setBackground(BaseColor.RED);
+            finalChunk.setBackground(BaseColor.WHITE);
 
             Paragraph finalBalanceLine = new Paragraph(finalChunk);
             finalBalanceLine.setAlignment(Element.ALIGN_RIGHT);
@@ -206,7 +216,7 @@ public class PdfService {
 
             // Footer
             Paragraph footer = new Paragraph(
-                    "Thank You For Purchasing\nContact on Vishal Jain Mobile No → 9537886555",
+                    "Thank You For Purchasing\nContact on Vishal Jain Mobile No : +91 9537886555",
                     fontBold);
             footer.setAlignment(Element.ALIGN_CENTER);
             footer.setSpacingBefore(20f);
