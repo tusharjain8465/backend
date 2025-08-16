@@ -29,8 +29,8 @@ public class ClientService {
         return clientRepository.save(client);
     }
 
-    public List<Client> getAllClients() {
-        return clientRepository.findAll();
+  public List<Client> getAllClients() {
+        return clientRepository.findAllOrderByNameDesc();
     }
 
     public Client getClientById(Long id) {
