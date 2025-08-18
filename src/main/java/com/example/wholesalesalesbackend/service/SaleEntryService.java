@@ -354,16 +354,19 @@ public class SaleEntryService {
         }
 
         ProfitAndSaleProjection result;
+        Double deposit = null;
 
         // If clientId is provided, use client-specific repository method
         if (clientId != null) {
             result = saleEntryRepository.getTotalPriceAndProfitBetweenDatesByClient(from,
                     to, clientId);
+             deposit = depositRepository.findTotalDepositBetweenDatesAndClientId(clientId,from, to);
+
         } else {
             result = saleEntryRepository.getTotalPriceAndProfitBetweenDates(from, to);
-        }
+             deposit = depositRepository.findTotalDepositBetweenDates(from, to);
 
-        Double deposit = depositRepository.findTotalDepositBetweenDates(from, to);
+        }
 
         Double sale = 0.0;
         Double profit = 0.0;
