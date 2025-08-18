@@ -1,8 +1,15 @@
 package com.example.wholesalesalesbackend.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.wholesalesalesbackend.dto.ProfitAndSale;
@@ -17,14 +24,6 @@ import com.example.wholesalesalesbackend.repository.ProfitAndSaleProjection;
 import com.example.wholesalesalesbackend.repository.SaleEntryRepository;
 
 import jakarta.transaction.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class SaleEntryService {
@@ -42,7 +41,12 @@ public class SaleEntryService {
 
         boolean isReturn = Boolean.TRUE.equals(dto.getReturnFlag());
 
-        String accessoryName = Optional.ofNullable(dto.getAccessoryName()).orElse("UNKNOWN");
+        String accessoryName = dto.getAccessoryName();
+
+        if (accessoryName == null || accessoryName.trim().isEmpty()) {
+            accessoryName = "Please Add Accessory";
+        }
+
         accessoryName = isReturn ? "RETURN -> " + accessoryName : "ADD -> " + accessoryName;
 
         Double totalPrice = Optional.ofNullable(dto.getTotalPrice()).orElse(0.0);
@@ -56,17 +60,24 @@ public class SaleEntryService {
             profit = Math.abs(profit);
         }
 
-        // Sale date in IST
+        LocalDateTime saleDateTimeInIST;
         ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
-        LocalDateTime saleDateTime = Optional.ofNullable(dto.getSaleDateTime())
-                .orElse(LocalDateTime.now(indiaZone));
+
+        if (dto.getSaleDateTime() != null) {
+            // Treat incoming LocalDateTime as if it is in IST
+            ZonedDateTime zonedDateTime = dto.getSaleDateTime().atZone(indiaZone);
+            saleDateTimeInIST = zonedDateTime.toLocalDateTime();
+        } else {
+            // Use current time in IST
+            saleDateTimeInIST = LocalDateTime.now(indiaZone);
+        }
 
         SaleEntry saleEntry = SaleEntry.builder()
                 .accessoryName(accessoryName)
                 .quantity(Optional.ofNullable(dto.getQuantity()).orElse(1))
                 .totalPrice(totalPrice)
                 .profit(profit)
-                .saleDateTime(saleDateTime)
+                .saleDateTime(saleDateTimeInIST)
                 .note(dto.getNote())
                 .returnFlag(isReturn)
                 .client(client)
@@ -274,16 +285,26 @@ public class SaleEntryService {
         SaleEntry existing = saleEntryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("SaleEntry not found"));
 
+        // Handle accessory name with default and return/add prefix
+        String accessoryName = updatedEntry.getAccessoryName();
+        if (accessoryName == null || accessoryName.trim().isEmpty()) {
+            updatedEntry.setAccessoryName("Please Add Accesory");
+        }
+
         existing
                 .setAccessoryName(
                         Boolean.TRUE.equals(updatedEntry.getReturnFlag())
                                 ? "RETURN -> " + updatedEntry.getAccessoryName()
                                 : "ADD -> " + updatedEntry.getAccessoryName());
+
+        existing.setTotalPrice(
+                updatedEntry.getTotalPrice() != null ? updatedEntry.getTotalPrice() : 0.0);
+        existing.setProfit(
+                updatedEntry.getProfit() != null ? updatedEntry.getProfit() : 0.0);
+
         existing.setQuantity(updatedEntry.getQuantity());
-        existing.setTotalPrice(updatedEntry.getTotalPrice());
         existing.setReturnFlag(updatedEntry.getReturnFlag());
         existing.setSaleDateTime(updatedEntry.getSaleDateTime());
-        existing.setProfit(updatedEntry.getProfit());
         existing.setNote(updatedEntry.getNote());
         existing.setAccessoryName(updatedEntry.getAccessoryName());
 
