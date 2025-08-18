@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.wholesalesalesbackend.dto.ProfitAndSale;
+import com.example.wholesalesalesbackend.dto.ProfitAndSaleAndDeposit;
 import com.example.wholesalesalesbackend.dto.SaleAttributeUpdateDTO;
 import com.example.wholesalesalesbackend.dto.SaleEntryDTO;
 import com.example.wholesalesalesbackend.dto.SaleEntryRequestDTO;
@@ -20,6 +21,7 @@ import com.example.wholesalesalesbackend.dto.SaleUpdateRequest;
 import com.example.wholesalesalesbackend.model.Client;
 import com.example.wholesalesalesbackend.model.SaleEntry;
 import com.example.wholesalesalesbackend.repository.ClientRepository;
+import com.example.wholesalesalesbackend.repository.DepositRepository;
 import com.example.wholesalesalesbackend.repository.ProfitAndSaleProjection;
 import com.example.wholesalesalesbackend.repository.SaleEntryRepository;
 
@@ -33,6 +35,9 @@ public class SaleEntryService {
 
     @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private DepositRepository depositRepository;
 
     public SaleEntry addSaleEntry(SaleEntryRequestDTO dto) {
 
@@ -337,7 +342,8 @@ public class SaleEntryService {
         return "Deleted !!!";
     }
 
-    public ProfitAndSale getTotalProfitByDateRange(LocalDateTime from, LocalDateTime to, Long days, Long clientId) {
+    public ProfitAndSaleAndDeposit getTotalProfitByDateRange(LocalDateTime from, LocalDateTime to, Long days,
+            Long clientId) {
 
         // If 'days' is provided but no from/to, calculate date range
         if (days != null && from == null && to == null) {
@@ -357,12 +363,25 @@ public class SaleEntryService {
             result = saleEntryRepository.getTotalPriceAndProfitBetweenDates(from, to);
         }
 
+        Double deposit = depositRepository.findTotalDepositBetweenDates(from, to);
+
+        Double sale = 0.0;
+        Double profit = 0.0;
+        Double actualSale = 0.0;
+        Double depositValue = 0.0;
+
         // Handle null projection result
-        if (result == null) {
-            return new ProfitAndSale(0.0, 0.0);
+        if (result != null) {
+            sale = result.getSale();
+            profit = result.getProfit();
+            actualSale = sale - profit;
         }
 
-        return new ProfitAndSale(result.getSale(), result.getProfit());
+        if (deposit != null) {
+            depositValue = deposit;
+        }
+
+        return new ProfitAndSaleAndDeposit(sale, profit, actualSale, depositValue);
     }
 
     public ProfitAndSale getTotalSaleDateRange(LocalDateTime from, LocalDateTime to, Long clientId) {
