@@ -35,4 +35,8 @@ public interface DepositRepository extends JpaRepository<Deposit, Long> {
         @Query(value = "SELECT SUM(t.amount) FROM deposits t WHERE t.client_id = :clientId AND DATE(t.deposit_date) < :fromDate", nativeQuery = true)
         Double getTotalDepositOfClient(@Param("clientId") Long clientId,
                         @Param("fromDate") LocalDateTime fromDate);
+
+        @Query(value = "SELECT SUM(t.amount) FROM deposits t WHERE t.deposit_date BETWEEN :from AND :to", nativeQuery = true)
+        Double findTotalDepositBetweenDates(@Param("from") LocalDateTime from,
+                        @Param("to") LocalDateTime to);
 }
