@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.wholesalesalesbackend.dto.GraphResponseDTO;
 import com.example.wholesalesalesbackend.dto.ProfitAndSale;
+import com.example.wholesalesalesbackend.dto.ProfitAndSaleAndDeposit;
 import com.example.wholesalesalesbackend.dto.SaleAttributeUpdateDTO;
 import com.example.wholesalesalesbackend.dto.SaleEntryDTO;
 import com.example.wholesalesalesbackend.dto.SaleEntryRequestDTO;
@@ -170,7 +171,7 @@ public class SaleEntryController {
     }
 
     @GetMapping("/profit/by-date-range")
-    public ResponseEntity<ProfitAndSale> getProfitByDateRange(
+    public ResponseEntity<ProfitAndSaleAndDeposit> getProfitByDateRange(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
             @RequestParam(required = false) Long days,
@@ -309,4 +310,3 @@ public class SaleEntryController {
     }
 
 }
-
